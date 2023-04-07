@@ -1,3 +1,13 @@
+# Level control
+# Compare setpoint against actual level and use the pump to adjust the level to setpoint
+
+# The holding variables will be tasmota variables
+# VAR1 - Wavetank-a Setpoint
+# VAR2 - Wavetank-B Setpoint
+# VAR3 - Wavetank-a actual
+# VAR4 - Wavetank-b Actual
+# Rules will copy the level measurements into the VARx
+
 import json
 import string
 
