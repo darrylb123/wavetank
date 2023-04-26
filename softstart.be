@@ -2,6 +2,8 @@
 # Soft start/stop of wave drive
 # ramps up/down PWM1 to vary the control voltage to the speed controller.
 # requires rule top call the function when relay 5 ( wave drive toggle) state changes
+# Template {"NAME":"ESP32-4Relay","GPIO":[32,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,288,0,226,227,1,0,0,0,0,224,225,1,1,1,0,0,1],"FLAG":0,"BASE":1}
+#          {"NAME":"ESP32-WaveTank","GPIO":[32,1,1,1,1,1,1,1,448,1,228,608,640,1,1,7360,0,7361,1,288,0,226,227,36,0,0,0,0,224,225,1,1,1,0,0,1],"FLAG":0,"BASE":1}
 # rule1 on power5#state do softss %value% endon
 # rule1 1
 ###################################################################################
