@@ -6,7 +6,7 @@ import string
 import mqtt
 
 def wavetank_msg(topic, idx, payload_s, payload_b)
-	print(payload_s)
+	# print(payload_s)
 	var tank_msg = json.load(payload_s)
 	var disabled = 0
 	if tank_msg['disabled'] == "disabled"
@@ -22,4 +22,4 @@ def subscribes()
   mqtt.subscribe("cmnd/wavetank/control",wavetank_msg)
 end
 
-tasmota.add_rule("MQTT#Connected=1", subscribes)
+tasmota.add_rule("MQTT#Connected", subscribes)

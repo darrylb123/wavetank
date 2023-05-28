@@ -6,7 +6,11 @@
 # VAR2 - Tide Mean
 # VAR3 - Tide PtP
 # VAR4 - Wavetank pumps disable
-# MQTT will copy the settings into the VARx
+# VAR5 = Tank A level
+# VAR6 = Tank B Level
+# VAR7 = Calculated Setpoint
+# MQTT will copy the settings into the VAR1-4
+# Rule will copy laser level into Var5-6
 
 import json
 import string
@@ -28,11 +32,14 @@ end
 
 def each_ten_sec()
 	var tasvars=tasmota.cmd('var')
-	var disable = tasvars['Var5']
-	# print(check_level(setpoint[0],level[0]))
+	var disable = number(tasvars['Var4'])
+	var levelA =  number(tasvars['Var5'])
+	var levelB =  number(tasvars['Var6'])
+	
+	# print(check_level(setpoint,levelA))
 	
 	# pump A control
-	var ret = check_level(setpoint[0],level[0])
+	var ret = check_level(setpoint,levelA)
 	if ret == 1 && !disable
 		tasmota.set_power(0,false)
 		tasmota.set_power(1,true)
@@ -45,7 +52,7 @@ def each_ten_sec()
 	end
 		
 	# pump B control
-	ret = check_level(setpoint,level[1])
+	ret = check_level(setpoint,levelB)
 	if ret == 1 && !disable
 		tasmota.set_power(2,false)
 		tasmota.set_power(3,true)
@@ -69,8 +76,8 @@ def each_minute()
 	var thetime=tasmota.rtc()
 	var minute = thetime['local']/60
 	setpoint = mean+((math.sin((2.0*math.pi)*(real((minute % period)) / period)))*ptp)
-	print(string.format("SP: %f", setpoint))
-	
+	var sp= string.format("var7 %f", setpoint)
+	tasmota.cmd(sp)
 end
 
 
