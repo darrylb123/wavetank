@@ -5,6 +5,9 @@ import json
 import string
 import mqtt
 
+# The water volume at full mark
+var fullConst = 300
+
 def wavetank_msg(topic, idx, payload_s, payload_b)
 	# print(payload_s)
 	var tank_msg = json.load(payload_s)
@@ -18,8 +21,43 @@ def wavetank_msg(topic, idx, payload_s, payload_b)
 	tasmota.cmd(cmd_str)
 end
 
-def subscribes()
-  mqtt.subscribe("cmnd/wavetank/control",wavetank_msg)
+# Load MEM1 and MEM2 with the full value as a starting point for volume calculations
+def tanks_full(topic, idx, payload_s, payload_b)
+    print(payload_s)
+    var tank_msg = json.load(payload_s)
+    # Unique number set in autoexec.be
+    var mem1 = 0
+    var mem2 = 0
+    if ( tankPair == 1 )
+        if tank_msg['T1'] == "true"
+            mem1 = fullConst
+        end
+        if tank_msg['T2'] == "true"
+            mem2 = fullConst
+        end
+    end
+    if ( tankPair == 2 )
+        if tank_msg['T3'] == "true"
+            mem1 = fullConst
+        end
+        if tank_msg['T4'] == "true"
+            mem2 = fullConst
+        end
+    end
+    if ( tankPair == 3 )
+        if tank_msg['T5'] == "true"
+            mem1 = fullConst
+        end
+        if tank_msg['T6'] == "true"
+            mem2 = fullConst
+        end
+    end
+    var cmd_str = string.format("backlog mem1 %d; mem2 %d",mem1,mem2)
+	tasmota.cmd(cmd_str)
 end
+    
 
-tasmota.add_rule("MQTT#Connected", subscribes)
+mqtt.subscribe("cmnd/wavetank/control",wavetank_msg)
+mqtt.subscribe("cmnd/wavetank/full",tanks_full)
+
+

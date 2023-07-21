@@ -2,3 +2,4 @@
 #load("mqtt.be")
 #load("pump_ctl.be")
 load("softstart.be")
+var tankPair = 1
