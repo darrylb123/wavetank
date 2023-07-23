@@ -8,48 +8,54 @@
 # VAR4 - Wavetank pumps disable
 # VAR5 = Tank A level
 # VAR6 = Tank B Level
-# VAR7 = Calculated Setpoint
+# VAR7 = Calculated Setpoint volume
+# VAR8 = calculated height setpoint
+# VAR10 = Derived volume Tank A
+# VAR11 = Derived volume Tank B
 # MQTT will copy the settings into the VAR1-4
 # Rule will copy laser level into Var5-6
+
 
 import json
 import string
 import math
 
-var setpoint = 0
-var volPer10Sec = 1;
-var mem1 = 0
-var mem2 = 0
+var setpoint = 0.0
+
+# load volume setting from memory
+var mems = tasmota.cmd('mem')
+var10 = real(mems['Mem1'])
+var11 = real(mems['Mem2'])
 
 # Calculate and update the current tank volume based on how long the pumps have been running.
 def updateVolume()
     # Relay 1 and 3 increase volume, 2 &4 decrease
     var curVol = 0
     var updateCmd = ""
-    var tasvars=tasmota.cmd('mem')
-	mem1 = number(tasvars['Mem1'])
-	mem2 = number(tasvars['Mem2'])
+    var tasvars=tasmota.cmd('var')
+	# var10 = number(tasvars['Var10'])
+	# var11 = number(tasvars['Var11'])
 	var pwrState = tasmota.get_power()
 	
-	print(string.format("mem2 %d mem2 %d \n",mem1,mem2))
+	# print(string.format("var11 %f var11 %f \n",var10,var11))
     if pwrState[0]
-        mem1 =  mem1 + volPer10Sec
-        updateCmd = string.format("mem1 %d", mem1)
+        var10 =  var10 + volPer10Sec
+        updateCmd = string.format("var10 %f", var10)
         tasmota.cmd(updateCmd)
     end
     if pwrState[1] 
-        mem1 =  mem1 - volPer10Sec
-        updateCmd = string.format("mem1 %d", mem1)
+        var10 =  var10 - volPer10Sec
+        updateCmd = string.format("var10 %f", var10)
         tasmota.cmd(updateCmd)
     end
     if pwrState[2] 
-        mem2 =  mem2 + volPer10Sec
-        updateCmd = string.format("mem2 %d", mem2)
+        var11 =  var11 + volPer10Sec
+        updateCmd = string.format("var11 %f", var11)
         tasmota.cmd(updateCmd)
     end
     if pwrState[3]
-        mem2 =  mem2 - volPer10Sec
-        updateCmd = string.format("mem2 %d", mem2)
+        var11 =  var11 - volPer10Sec
+        updateCmd = string.format("var11 %f", var11)
         tasmota.cmd(updateCmd)
     end 
     
@@ -59,10 +65,10 @@ end
 def checkVol(sp,vol)
 	var deadband = 0.2
 	print(string.format("SP: %f Vol: %f",sp,vol))
-	if  (vol + deadband) < sp
+	if  (vol - deadband) > sp
 		return 1
 	end
-	if (vol - deadband) > sp 
+	if (vol + deadband) < sp 
 		return -1
 	end
 	return 0
@@ -72,46 +78,79 @@ end
 def each_ten_sec()
 	var tasvars=tasmota.cmd('var')
 	var disable = number(tasvars['Var4'])
+	var volume = real(tasvars['Var7'])
 	updateVolume()
-	
-	# print(checkVol(setpoint,mem1))
+	var pwrState = tasmota.get_power()
+
 	if !disable
 	    # pump A control
-	    var ret = checkVol(setpoint,mem1)
+	    var ret = checkVol(volume,var10)
 	    if ret == 1
-	    	tasmota.set_power(0,false)
-	    	tasmota.set_power(1,true)
+	        if pwrState[0]
+	    	    tasmota.set_power(0,false)
+	    	end
+	    	if !pwrState[1]
+	    	    tasmota.set_power(1,true)
+	    	    end
 	    elif ret == -1
-	    	tasmota.set_power(0,true)
-	    	tasmota.set_power(1,false)
+	        if !pwrState[0]
+	    	    tasmota.set_power(0,true)
+	    	end
+	    	if pwrState[1]
+	    	    tasmota.set_power(1,false)
+	    	end
 	    else
-	    	tasmota.set_power(0,false)
-	    	tasmota.set_power(1,false)
+	        if pwrState[0]
+	    	    tasmota.set_power(0,false)
+	    	end
+	    	if pwrState[1]
+	    	    tasmota.set_power(1,false)
+	    	end
 	    end
 		
 	    # pump B control
-	    ret = checkVol(setpoint,mem2)
+	    ret = checkVol(volume,var11)
 	    if ret == 1
-	    	tasmota.set_power(2,false)
-	    	tasmota.set_power(3,true)
+	        if pwrState[2]
+	    	    tasmota.set_power(2,false)
+	    	end
+	    	if !pwrState[3]
+	    	    tasmota.set_power(3,true)
+	    	end
 	    elif ret == -1
-	    	tasmota.set_power(2,true)
-	    	tasmota.set_power(3,false)
+	        if !pwrState[2]
+	    	    tasmota.set_power(2,true)
+	    	end
+	    	if pwrState[3]
+	    	    tasmota.set_power(3,false)
+	    	end
 	    else
-	    	tasmota.set_power(2,false)
-	    	tasmota.set_power(3,false)
+	        if pwrState[2]
+	    	    tasmota.set_power(2,false)
+	    	end
+	    	if pwrState[3]
+	    	    tasmota.set_power(3,false)
+	    	end
 	    end
 	else
+	    if pwrState[0]
 	        tasmota.set_power(0,false)
-	    	tasmota.set_power(1,false)
+	    end
+	    if pwrState[1]
+	        tasmota.set_power(1,false)
+	    end
+	    if pwrState[2]
             tasmota.set_power(2,false)
+        end
+        if pwrState[3]
 	    	tasmota.set_power(3,false)
+	    end
 	end
 end
 
 
 def each_minute()
-	var tasvars=tasmota.cmd('var')
+    var tasvars=tasmota.cmd('var')
 	var period = number(tasvars['Var1'])
 	var mean = number(tasvars['Var2'])
 	var ptp = number(tasvars['Var3'])
@@ -119,14 +158,16 @@ def each_minute()
 	var thetime=tasmota.rtc()
 	var minute = thetime['local']/60
 	setpoint = mean+((math.sin((2.0*math.pi)*(real((minute % period)) / period)))*ptp)
-	var sp= string.format("var7 %f", setpoint)
+	var volume = ( 0.00032229 * (setpoint * setpoint)) +  ( 0.0037352 * setpoint ) - 0.11038
+	var sp= string.format("backlog var7 %f ; var8 %f ; mem1 %f ; mem2 %f", volume, setpoint, var10, var11)
+	print(sp)
 	tasmota.cmd(sp)
 end
 
 
 # Each 10 seconds check level against setpoint
-tasmota.add_cron("*/10 * * * * *",each_ten_sec,"level_ctl")
-tasmota.add_cron("0 * * * * *",each_minute,"setpoint")
+# tasmota.add_cron("*/10 * * * * *",each_ten_sec,"level_ctl")
+# tasmota.add_cron("0 * * * * *",each_minute,"setpoint")
 
 
 
