@@ -63,12 +63,12 @@ end
 
 
 def checkVol(sp,vol)
-	var deadband = 0.2
+	var deadband = 0.02
 	print(string.format("SP: %f Vol: %f",sp,vol))
-	if  (vol - deadband) > sp
+	if  (vol + deadband) > sp
 		return 1
 	end
-	if (vol + deadband) < sp 
+	if (vol - deadband) < sp 
 		return -1
 	end
 	return 0
@@ -82,11 +82,11 @@ def each_ten_sec()
 	updateVolume()
 	var pwrState = tasmota.get_power()
 
-	if !disable
+	if !disable && !pwrState[5] 
 	    # pump A control
 	    var ret = checkVol(volume,var10)
 	    if ret == 1
-	        if pwrState[0]
+	        if pwrState[0] 
 	    	    tasmota.set_power(0,false)
 	    	end
 	    	if !pwrState[1]
@@ -157,10 +157,10 @@ def each_minute()
 	
 	var thetime=tasmota.rtc()
 	var minute = thetime['local']/60
-	setpoint = mean+((math.sin((2.0*math.pi)*(real((minute % period)) / period)))*ptp)
+	setpoint = mean+((math.sin((2.0*math.pi)*(real((minute % period)) / period)))*(ptp/2))
 	var volume = ( 0.00032229 * (setpoint * setpoint)) +  ( 0.0037352 * setpoint ) - 0.11038
 	var sp= string.format("backlog var7 %f ; var8 %f ; mem1 %f ; mem2 %f", volume, setpoint, var10, var11)
-	print(sp)
+	# print(sp)
 	tasmota.cmd(sp)
 end
 

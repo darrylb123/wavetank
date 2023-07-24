@@ -19,6 +19,7 @@ def wavetank_msg(topic, idx, payload_s, payload_b)
 	log(output_str)
 	var cmd_str = string.format("backlog var1 %d; var2 %d; var3 %d; var4 %d",number(tank_msg['period']),number(tank_msg['mean']),number(tank_msg['ptp']),disabled)
 	tasmota.cmd(cmd_str)
+
 end
 
 # Load MEM1 and MEM2 with the full value as a starting point for volume calculations
@@ -72,6 +73,8 @@ def subscribes()
   # Each 10 seconds check level against setpoint
     tasmota.add_cron("*/10 * * * * *",each_ten_sec,"level_ctl")
     tasmota.add_cron("0 * * * * *",each_minute,"setpoint")
+
 end
 
-tasmota.add_rule("MQTT#Connected=1", subscribes)
+subscribes()
+# tasmota.add_rule("MQTT#Connected=1", subscribes)
