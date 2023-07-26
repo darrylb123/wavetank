@@ -21,6 +21,7 @@ import string
 import math
 
 var setpoint = 0.0
+var pumpState = [0,0]
 
 # load volume setting from memory
 var mems = tasmota.cmd('mem')
@@ -40,7 +41,7 @@ def updateVolume()
 	# print(string.format("var11 %f var11 %f \n",var10,var11))
 	# Left tank in 
     if pwrState[0]
-        var10 =  var10 + volPer10Sec[tankPair][1]
+        var10 =  var10  + volPer10Sec[tankPair][1]
         updateCmd = string.format("var10 %f", var10)
         tasmota.cmd(updateCmd)
     end
@@ -66,14 +67,27 @@ def updateVolume()
 end
 
 
-def checkVol(sp,vol)
-	var deadband = 0.02
-	print(string.format("SP: %f Vol: %f",sp,vol))
-	if  (vol + deadband) > sp
-		return 1
-	end
-	if (vol - deadband) < sp 
-		return -1
+def checkVol(sp,vol,pumpa,pumpb)
+    # deadband is > 2* flow rate
+    # if the pumps are running, then run to setpoint
+    # else wait until the volume has exceeded the deadband before running again.
+	var deadband = 0.05
+	print(string.format("SP: %f Vol: %f Diff: %f",sp,vol, vol - sp))
+	# If the pump is running, allow to drive into the deadband
+	if pumpa || pumpb
+	    if  vol  < sp
+		    return -1
+		end
+	    if vol  > sp 
+		    return 1
+	    end
+	elif  math.abs(vol - sp) > deadband
+	    if  vol  < sp
+		    return -1
+		end
+	    if vol  > sp 
+		    return 1
+	    end
 	end
 	return 0
 end
@@ -85,10 +99,15 @@ def each_ten_sec()
 	var volume = real(tasvars['Var7'])
 	updateVolume()
 	var pwrState = tasmota.get_power()
-
+    
 	if !disable && !pwrState[5] 
 	    # pump A control
-	    var ret = checkVol(volume,var10)
+	    var ret = checkVol(volume,var10,pwrState[0],pwrState[1])
+	    if ret != pumpState[0]
+	        pumpState[0] = ret
+	        ret = 0
+	    end
+	    
 	    if ret == 1
 	        if pwrState[0] 
 	    	    tasmota.set_power(0,false)
@@ -113,7 +132,11 @@ def each_ten_sec()
 	    end
 		
 	    # pump B control
-	    ret = checkVol(volume,var11)
+	    ret = checkVol(volume,var11,pwrState[2],pwrState[3])
+	    if ret !=  pumpState[1]
+	        pumpState[1] = ret
+	        ret = 0
+	    end
 	    if ret == 1
 	        if pwrState[2]
 	    	    tasmota.set_power(2,false)
