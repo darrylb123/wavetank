@@ -1,5 +1,6 @@
 # Level control
 # Compare setpoint against actual level and use the pump to adjust the level to setpoint
+# Template: {"NAME":"ESP32-WaveTank","GPIO":[32,1,1,1,1,1,1,1,448,229,228,229,1,1,1,1,0,1,1,288,0,226,227,36,0,0,0,0,224,225,1,1,1,0,0,1],"FLAG":0,"BASE":1}
 
 # The holding variables will be tasmota variables
 # VAR1 - Tide Period
@@ -181,7 +182,12 @@ def each_minute()
 	var period = number(tasvars['Var1'])
 	var mean = number(tasvars['Var2'])
 	var ptp = number(tasvars['Var3'])
-	
+	var pwrState = tasmota.get_power()
+	# If the pump to empty button is set
+	if pwrState[5] 
+	    mean = 0
+	    ptp = 0
+	endif
 	var thetime=tasmota.rtc()
 	var minute = thetime['local']/60
 	setpoint = mean+((math.sin((2.0*math.pi)*(real((minute % period)) / period)))*(ptp/2))
