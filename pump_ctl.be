@@ -160,7 +160,8 @@ def each_ten_sec()
 	    	    tasmota.set_power(3,false)
 	    	end
 	    end
-	else
+	end
+	if disable
 	    if pwrState[0]
 	        tasmota.set_power(0,false)
 	    end
