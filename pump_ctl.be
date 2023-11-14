@@ -42,25 +42,25 @@ def updateVolume()
 	# print(string.format("var11 %f var11 %f \n",var10,var11))
 	# Left tank in 
     if pwrState[0]
-        var10 =  var10  + volPer10Sec[tankPair][1]
+        var10 =  var10  + leftFillRate
         updateCmd = string.format("var10 %f", var10)
         tasmota.cmd(updateCmd)
     end
     # Left tank out 
     if pwrState[1] 
-        var10 =  var10 - volPer10Sec[tankPair][0]
+        var10 =  var10 - leftEmptyRate
         updateCmd = string.format("var10 %f", var10)
         tasmota.cmd(updateCmd)
     end
     # Right Tank un
     if pwrState[2] 
-        var11 =  var11 + volPer10Sec[tankPair][3]
+        var11 =  var11 + rightFillRate
         updateCmd = string.format("var11 %f", var11)
         tasmota.cmd(updateCmd)
     end
     # Right tank out
     if pwrState[3]
-        var11 =  var11 - volPer10Sec[tankPair][2]
+        var11 =  var11 - rightEmptyRate
         updateCmd = string.format("var11 %f", var11)
         tasmota.cmd(updateCmd)
     end 
@@ -160,8 +160,7 @@ def each_ten_sec()
 	    	    tasmota.set_power(3,false)
 	    	end
 	    end
-	end
-	if disable
+	else
 	    if pwrState[0]
 	        tasmota.set_power(0,false)
 	    end
