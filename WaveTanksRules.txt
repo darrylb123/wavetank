@@ -5,8 +5,17 @@ MEM3 Measured low level in mm
 MEM4 Measured Part leven in mm
 MEM5 Websend target address
 
+Tank 1
+Rule1
+ON SYSTEM#BOOT do ruletimer1 5 ENDON
+ON VL53L0X#distance do backlog sub2 %VAR3%; add2 %value% ; VAR3 %VAR2% ;mult3 0.2 ; scale1 %var3%, %MEM1%, %MEM2%, %MEM3%, %MEM4% ENDON
+on RULES#TIMER=1 DO backlog websend [172.25.1.128] VAR5 %VAR1%; RULETIMER1 10 ENDON
+
+Tank 2
 Rule1
 ON SYSTEM#BOOT do ruletimer1 10 ENDON
-ON VL53L0X#distance do scale1 %value%, %MEM1%, %MEM2%, %MEM3%, %MEM4% ENDON
-ON RULES#TIMER=1 DO websend [172.25.1.30] VAR5 %VAR1% ENDON
+ON VL53L0X#distance do backlog sub2 %VAR3%; add2 %value% ; VAR3 %VAR2% ;mult3 0.2 ; scale1 %var3%, %MEM1%, %MEM2%, %MEM3%, %MEM4% ENDON
+ON RULES#TIMER=1 DO backlog websend [172.25.1.128] VAR6 %VAR1%; RULETIMER1 10 ENDON
+
+
 
