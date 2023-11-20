@@ -136,7 +136,7 @@ def each_ten_sec()
 	    end
 	end
 	# empty the level vars so they must be updated before next time
-	tasmota.cmd("backlog VAR5 \"\" ; VAR6 \"\"")
+	# tasmota.cmd("backlog VAR5 \"\" ; VAR6 \"\"")
 end
 
 

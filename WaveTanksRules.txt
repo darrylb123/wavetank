@@ -18,4 +18,16 @@ ON VL53L0X#distance do backlog sub2 %VAR3%; add2 %value% ; VAR3 %VAR2% ;mult3 0.
 ON RULES#TIMER=1 DO backlog websend [172.25.1.128] VAR6 %VAR1%; RULETIMER1 10 ENDON
 
 
+Tank 1
+Rule1
+ON SYSTEM#BOOT do ruletimer1 5 ENDON
+ON VL53L0X#distance do backlog sub2 %VAR3%; add2 %value% ; VAR3 %VAR2% ;mult3 0.2 ; scale1 %var3%, %MEM1%, %MEM2%, %MEM3%, %MEM4% ENDON
+on RULES#TIMER=1 DO backlog publish cmnd/tasmota_500D38/VAR5 %VAR1%; RULETIMER1 10 ENDON
+
+Tank 1
+Rule1
+ON SYSTEM#BOOT do ruletimer1 5 ENDON
+ON VL53L0X#distance do backlog sub2 %VAR3%; add2 %value% ; VAR3 %VAR2% ;mult3 0.2 ; scale1 %var3%, %MEM1%, %MEM2%, %MEM3%, %MEM4% ENDON
+on RULES#TIMER=1 DO backlog publish cmnd/tasmota_500D38/VAR6 %VAR1%; RULETIMER1 10 ENDON
+
 
