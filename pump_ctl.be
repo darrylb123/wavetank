@@ -7,12 +7,12 @@
 # VAR2 - Tide Mean
 # VAR3 - Tide PtP
 # VAR4 - Wavetank pumps disable
-# VAR5 = Tank A level
-# VAR6 = Tank B Level
+# VAR5 = Tank A volume
+# VAR6 = Tank B volume
 # VAR7 = Calculated Setpoint volume
 # VAR8 = calculated height setpoint
-# VAR10 = Derived volume Tank A
-# VAR11 = Derived volume Tank B
+# VAR10 = Tank A Flow rate (l/min)
+# VAR11 = Tank A Flow rate (l/min)
 # MQTT will copy the settings into the VAR1-4
 # Rule will copy laser level into Var5-6
 
@@ -24,10 +24,11 @@ import math
 var setpoint = 0.0
 var pumpState = [0,0]
 
+var tankAlast = real(0.0)
+var tankBlast = real(0.0)
+
 # load volume setting from memory
 var mems = tasmota.cmd('mem')
-var10 = real(mems['Mem1'])
-var11 = real(mems['Mem2'])
 
 
 
@@ -60,12 +61,14 @@ end
 def each_ten_sec()
 	var tasvars=tasmota.cmd('var')
 	var disable = number(tasvars['Var4'])
-	var volume = real(tasvars['Var7'])
+	var spVolume = real(tasvars['Var7'])
 	var pwrState = tasmota.get_power()
+	var tankAvol = real(tasvars['Var5'])
+    var tankBvol = real(tasvars['Var6'])
     
 	if !disable && !pwrState[5] 
 	    # pump A control
-	    var ret = checkVol(volume,var10,pwrState[0],pwrState[1])
+	    var ret = checkVol(spVolume,tankAvol,pwrState[0],pwrState[1])
 	    if ret != pumpState[0]
 	        pumpState[0] = ret
 	        ret = 0
@@ -95,7 +98,7 @@ def each_ten_sec()
 	    end
 		
 	    # pump B control
-	    ret = checkVol(volume,var11,pwrState[2],pwrState[3])
+	    ret = checkVol(spVolume,tankBvol,pwrState[2],pwrState[3])
 	    if ret !=  pumpState[1]
 	        pumpState[1] = ret
 	        ret = 0
@@ -144,17 +147,21 @@ def each_minute()
 	var period = number(tasvars['Var1'])
 	var mean = number(tasvars['Var2'])
 	var ptp = number(tasvars['Var3'])
+	var tankAvol = number(tasvars['Var5'])
+	var tankBvol = number(tasvars['Var6'])
 	var pwrState = tasmota.get_power()
 	# If the pump to empty button is set
 	if pwrState[5] 
 	    mean = 0
 	    ptp = 0
-	endif
+	end
 	var thetime=tasmota.rtc()
 	var minute = thetime['local']/60
 	setpoint = mean+((math.sin((2.0*math.pi)*(real((minute % period)) / period)))*(ptp/2))
 	var volume = ( 0.00032229 * (setpoint * setpoint)) +  ( 0.0037352 * setpoint ) - 0.11038
-	var sp= string.format("backlog var7 %f ; var8 %f ; mem1 %f ; mem2 %f", volume, setpoint, var10, var11)
+	var sp= string.format("backlog var7 %f ; var8 %f ; var10 %f, var11 %f ", volume, setpoint, math.abs(tankAvol - tankAlast), math.abs(tankBvol - tankBlast))
+	tankAlast = tankAvol
+	tankBlast = tankBvol
 	# print(sp)
 	tasmota.cmd(sp)
 end
